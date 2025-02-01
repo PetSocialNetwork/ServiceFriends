@@ -100,17 +100,23 @@ namespace ServiceFriends.Domain.Services
             return await _friendShipRepository.GetReceivedRequestAsync(userId, cancellationToken);
         }
 
+        public async Task<bool> IsFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        { 
+            //проверить есть ли пользователь в друзьях
+            //то есть что и там и там есть статус Accepted
+        }
+
         private async Task<(FriendShip user, FriendShip friend)> GetFrinedShip(Guid userId, Guid friendId, CancellationToken cancellationToken)
         {
             var existedUser = await _friendShipRepository.FindReceivedSentAsync(userId, friendId, cancellationToken);
             if (existedUser == null)
             {
-                throw new FriendShipNotFoundException("Нет такой завяки на дружбу.");
+                throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");
             }
             var existedFriend = await _friendShipRepository.FindReceivedRequestAsync(userId, friendId, cancellationToken);
             if (existedFriend == null)
             {
-                throw new FriendShipNotFoundException("Нет такой завяки на дружбу.");
+                throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");
             }
 
             return (existedUser, existedFriend);

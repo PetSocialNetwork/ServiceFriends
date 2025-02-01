@@ -85,6 +85,15 @@ namespace ServiceFriends.WebApi.Controllers
         }
 
         //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [HttpGet("[action]")]
+        public async Task<bool> IsFriendAsync([FromQuery] Guid userId, [FromQuery] Guid friendId, CancellationToken cancellationToken)
+        {
+            return await _friendShipService.IsFriendAsync(userId, friendId, cancellationToken);
+        }
+
+        //что-то недоделанное
+        //[ProducesResponseType(StatusCodes.Status200OK)]
         //[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(FriendShipNotFoundException))]
         //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPut("[action]")]
