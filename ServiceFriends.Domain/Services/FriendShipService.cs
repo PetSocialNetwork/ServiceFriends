@@ -3,7 +3,6 @@ using ServiceFriends.Domain.Enums;
 using ServiceFriends.Domain.Exceptions;
 using ServiceFriends.Domain.Interfaces;
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 
 namespace ServiceFriends.Domain.Services
 {
@@ -58,16 +57,10 @@ namespace ServiceFriends.Domain.Services
             var friends = new ConcurrentBag<FriendShip>();
             var (existedUser, existedFriend) = await GetFrinedShip(userId, friendId, cancellationToken);
 
-            existedUser.Status = FriendStatus.Rejected;
-            existedUser.CreatedAt = DateTime.UtcNow;
-
-            existedFriend.Status = FriendStatus.Rejected;
-            existedFriend.CreatedAt = DateTime.UtcNow;
-
             friends.Add(existedUser);
             friends.Add(existedFriend);
 
-            await _friendShipRepository.UpdateRange(friends, cancellationToken);
+            await _friendShipRepository.DeleteRange(friends, cancellationToken);
         }
 
         public async Task DeleteFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
@@ -82,10 +75,9 @@ namespace ServiceFriends.Domain.Services
             }
         }
 
-        public async IAsyncEnumerable<FriendShip> BySearchAsync(Guid userId, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async Task<List<FriendShip>> BySearchAsync(Guid userId, CancellationToken cancellationToken)
         {
-            await foreach (var friend in _friendShipRepository.BySearch(userId, cancellationToken))
-                yield return friend;
+            return await _friendShipRepository.BySearch(userId, cancellationToken);
         }
 
         //получить список входящих заявок, то есть те, у которых статус Sent
@@ -101,19 +93,23 @@ namespace ServiceFriends.Domain.Services
         }
 
         public async Task<bool> IsFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
-        { 
-            //проверить есть ли пользователь в друзьях
-            //то есть что и там и там есть статус Accepted
+        {
+            return await _friendShipRepository.IsFriendAsync(userId, friendId, cancellationToken);
+        }
+
+        public async Task<bool> HasSentRequestAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        {
+            return await _friendShipRepository.HasSentRequestAsync(userId, friendId, cancellationToken);
         }
 
         private async Task<(FriendShip user, FriendShip friend)> GetFrinedShip(Guid userId, Guid friendId, CancellationToken cancellationToken)
         {
-            var existedUser = await _friendShipRepository.FindReceivedSentAsync(userId, friendId, cancellationToken);
+            var existedUser = await _friendShipRepository.FindReceivedRequestAsync(userId, friendId, cancellationToken);
             if (existedUser == null)
             {
                 throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");
             }
-            var existedFriend = await _friendShipRepository.FindReceivedRequestAsync(userId, friendId, cancellationToken);
+            var existedFriend = await _friendShipRepository.FindSentRequestAsync(userId, friendId, cancellationToken);
             if (existedFriend == null)
             {
                 throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");

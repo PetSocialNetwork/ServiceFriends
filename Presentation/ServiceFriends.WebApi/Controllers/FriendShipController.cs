@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using ServiceFriends.Domain.Services;
 using ServiceFriends.WebApi.Models.Requests;
 using ServiceFriends.WebApi.Models.Responses;
-using System.Runtime.CompilerServices;
 
 namespace ServiceFriends.WebApi.Controllers
 {
@@ -19,10 +18,10 @@ namespace ServiceFriends.WebApi.Controllers
             _friendShipService = friendShipService ?? throw new ArgumentNullException(nameof(friendShipService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
-        
+
         //[ProducesResponseType(StatusCodes.Status200OK)]
         //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [HttpDelete("[action]")]
+        [HttpPost("[action]")]
         public async Task DeleteFriendAsync([FromBody] FriendRequest request, CancellationToken cancellationToken)
         {
             await _friendShipService.DeleteFriendAsync(request.UserId, request.FriendId, cancellationToken);
@@ -31,19 +30,16 @@ namespace ServiceFriends.WebApi.Controllers
         //[ProducesResponseType(StatusCodes.Status200OK)]
         //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("[action]")]
-        public async IAsyncEnumerable<FriendResponse> BySearchAsync([FromQuery] Guid userId, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async Task<List<FriendResponse>> BySearchAsync([FromQuery] Guid userId, CancellationToken cancellationToken)
         {
-            await foreach (var friend in _friendShipService.BySearchAsync(userId, cancellationToken))
-            {
-                var response = _mapper.Map<FriendResponse>(friend);
-                yield return response;
-            }
+            var friends = await _friendShipService.BySearchAsync(userId, cancellationToken);
+            return _mapper.Map<List<FriendResponse>>(friends);
         }
 
         //[ProducesResponseType(StatusCodes.Status200OK)]
         //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("[action]")]
-        public async Task<List<FriendResponse>> GetSentRequestAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<FriendResponse>> GetSentRequestAsync([FromQuery] Guid userId, CancellationToken cancellationToken)
         {
             var requests = await _friendShipService.GetSentRequestAsync(userId, cancellationToken);
             return _mapper.Map<List<FriendResponse>>(requests);
@@ -52,7 +48,7 @@ namespace ServiceFriends.WebApi.Controllers
         //[ProducesResponseType(StatusCodes.Status200OK)]
         //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("[action]")]
-        public async Task<List<FriendResponse>> GetReceivedRequestAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<FriendResponse>> GetReceivedRequestAsync([FromQuery] Guid userId, CancellationToken cancellationToken)
         {
             var requests = await _friendShipService.GetReceivedRequestAsync(userId, cancellationToken);
             return _mapper.Map<List<FriendResponse>>(requests);
@@ -64,6 +60,22 @@ namespace ServiceFriends.WebApi.Controllers
         public async Task SendFriendRequestAsync([FromBody] FriendRequest request, CancellationToken cancellationToken)
         {
             await _friendShipService.SendRequestAsync(request.UserId, request.FriendId, cancellationToken);
+        }
+
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [HttpGet("[action]")]
+        public async Task<bool> IsFriendAsync([FromQuery] Guid userId, [FromQuery] Guid friendId, CancellationToken cancellationToken)
+        {
+            return await _friendShipService.IsFriendAsync(userId, friendId, cancellationToken);
+        }
+
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [HttpGet("[action]")]
+        public async Task<bool> HasSentRequestAsync([FromQuery] Guid userId, [FromQuery] Guid friendId, CancellationToken cancellationToken)
+        {
+          return await _friendShipService.HasSentRequestAsync(userId, friendId, cancellationToken);
         }
 
         //[ProducesResponseType(StatusCodes.Status200OK)]
@@ -80,24 +92,6 @@ namespace ServiceFriends.WebApi.Controllers
         //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPut("[action]")]
         public async Task RejectFriendAsync([FromBody] FriendRequest request, CancellationToken cancellationToken)
-        {
-            await _friendShipService.RejectFriendAsync(request.UserId, request.FriendId, cancellationToken);
-        }
-
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [HttpGet("[action]")]
-        public async Task<bool> IsFriendAsync([FromQuery] Guid userId, [FromQuery] Guid friendId, CancellationToken cancellationToken)
-        {
-            return await _friendShipService.IsFriendAsync(userId, friendId, cancellationToken);
-        }
-
-        //что-то недоделанное
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(FriendShipNotFoundException))]
-        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [HttpPut("[action]")]
-        public async Task FindFriendsAsync([FromBody] FriendRequest request, CancellationToken cancellationToken)
         {
             await _friendShipService.RejectFriendAsync(request.UserId, request.FriendId, cancellationToken);
         }
