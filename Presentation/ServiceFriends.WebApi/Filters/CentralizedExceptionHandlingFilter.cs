@@ -24,8 +24,8 @@ namespace ServiceFriends.WebApi.Filters
         {
             return context.Exception switch
             {
-                FriendShipNotFoundException => ("Нет такой заявки на дружбу.", StatusCodes.Status400BadRequest),
-                Exception => ("Неизвестная ошибка.", StatusCodes.Status500InternalServerError),
+                FriendShipNotFoundException => ("Нет такой заявки на дружбу", StatusCodes.Status400BadRequest),
+                Exception => ("Неизвестная ошибка", StatusCodes.Status500InternalServerError),
                 _ => (null, 0)
             };
         }
