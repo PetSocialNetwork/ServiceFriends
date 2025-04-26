@@ -20,30 +20,30 @@ namespace ServiceFriends.WebApi.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task DeleteFriendAsync([FromBody] FriendRequest request, CancellationToken cancellationToken)
+        public async Task<List<FriendResponse>> BySearchAsync([FromBody] FriendBySearchRequest request, CancellationToken cancellationToken)
         {
-            await _friendShipService.DeleteFriendAsync(request.UserId, request.FriendId, cancellationToken);
-        }
-
-        [HttpGet("[action]")]
-        public async Task<List<FriendResponse>> BySearchAsync([FromQuery] Guid userId, CancellationToken cancellationToken)
-        {
-            var friends = await _friendShipService.BySearchAsync(userId, cancellationToken);
+            var friends = await _friendShipService.BySearchAsync(request.UserId, request.Take, request.Offset, cancellationToken);
             return _mapper.Map<List<FriendResponse>>(friends);
         }
 
-        [HttpGet("[action]")]
-        public async Task<List<FriendResponse>> GetSentRequestAsync([FromQuery] Guid userId, CancellationToken cancellationToken)
+        [HttpPost("[action]")]
+        public async Task<List<FriendResponse>> GetSentRequestAsync([FromBody] FriendBySearchRequest request, CancellationToken cancellationToken)
         {
-            var requests = await _friendShipService.GetSentRequestAsync(userId, cancellationToken);
+            var requests = await _friendShipService.GetSentRequestAsync(request.UserId, request.Take, request.Offset, cancellationToken);
             return _mapper.Map<List<FriendResponse>>(requests);
         }
 
-        [HttpGet("[action]")]
-        public async Task<List<FriendResponse>> GetReceivedRequestAsync([FromQuery] Guid userId, CancellationToken cancellationToken)
+        [HttpPost("[action]")]
+        public async Task<List<FriendResponse>> GetReceivedRequestAsync([FromBody] FriendBySearchRequest request, CancellationToken cancellationToken)
         {
-            var requests = await _friendShipService.GetReceivedRequestAsync(userId, cancellationToken);
+            var requests = await _friendShipService.GetReceivedRequestAsync(request.UserId, request.Take, request.Offset, cancellationToken);
             return _mapper.Map<List<FriendResponse>>(requests);
+        }
+
+        [HttpPost("[action]")]
+        public async Task DeleteFriendAsync([FromBody] FriendRequest request, CancellationToken cancellationToken)
+        {
+            await _friendShipService.DeleteFriendAsync(request.UserId, request.FriendId, cancellationToken);
         }
 
         [HttpPost("[action]")]

@@ -18,19 +18,31 @@ namespace ServiceFriends.DataEntityFramework.Repositories
             return friendships;
         }
 
-        public async Task<List<FriendShip>> BySearch(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<FriendShip>> BySearch(Guid userId, int take, int offset, CancellationToken cancellationToken)
         {
-            return await Entities.Where(c => c.UserId == userId && c.Status == FriendStatus.Accepted).ToListAsync(cancellationToken);
+            return await Entities
+                .Where(c => c.UserId == userId && c.Status == FriendStatus.Accepted)
+                .Skip(take * offset)
+                .Take(offset)
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<FriendShip>> GetSentRequestAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<FriendShip>> GetSentRequestAsync(Guid userId, int take, int offset, CancellationToken cancellationToken)
         {
-            return await Entities.Where(c => c.UserId == userId && c.Status == FriendStatus.Sent).ToListAsync(cancellationToken);
+            return await Entities
+                .Where(c => c.UserId == userId && c.Status == FriendStatus.Sent)
+                .Skip(take * offset)
+                .Take(offset)
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<FriendShip>> GetReceivedRequestAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<FriendShip>> GetReceivedRequestAsync(Guid userId, int take, int offset, CancellationToken cancellationToken)
         {
-            return await Entities.Where(c => c.UserId == userId && c.Status == FriendStatus.Received).ToListAsync(cancellationToken);
+            return await Entities
+                .Where(c => c.UserId == userId && c.Status == FriendStatus.Received)
+                .Skip(take * offset)
+                .Take(offset)
+                .ToListAsync(cancellationToken);
         }
 
         public async Task<FriendShip?> FindSentRequestAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)

@@ -75,21 +75,33 @@ namespace ServiceFriends.Domain.Services
             }
         }
 
-        public async Task<List<FriendShip>> BySearchAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<FriendShip>> BySearchAsync(Guid userId, int take, int offset, CancellationToken cancellationToken)
         {
-            return await _friendShipRepository.BySearch(userId, cancellationToken);
+            if (take < 0 || offset < 0)
+            {
+                throw new ArgumentException("Параметр не может быть меньше 0");
+            }
+            return await _friendShipRepository.BySearch(userId, take, offset, cancellationToken);
         }
 
         //получить список входящих заявок, то есть те, у которых статус Sent
-        public async Task<List<FriendShip>> GetSentRequestAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<FriendShip>> GetSentRequestAsync(Guid userId, int take, int offset, CancellationToken cancellationToken)
         {
-            return await _friendShipRepository.GetSentRequestAsync(userId, cancellationToken);
+            if (take < 0 || offset < 0)
+            {
+                throw new ArgumentException("Параметр не может быть меньше 0");
+            }
+            return await _friendShipRepository.GetSentRequestAsync(userId, take, offset, cancellationToken);
         }
 
         //получить список отправленных заявок, то есть те, у которых статус Received
-        public async Task<List<FriendShip>> GetReceivedRequestAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<List<FriendShip>> GetReceivedRequestAsync(Guid userId, int take, int offset, CancellationToken cancellationToken)
         {
-            return await _friendShipRepository.GetReceivedRequestAsync(userId, cancellationToken);
+            if (take < 0 || offset < 0)
+            {
+                throw new ArgumentException("Параметр не может быть меньше 0");
+            }
+            return await _friendShipRepository.GetReceivedRequestAsync(userId, take, offset, cancellationToken);
         }
 
         public async Task<bool> IsFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
