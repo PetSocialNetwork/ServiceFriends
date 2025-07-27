@@ -1,18 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿#pragma warning disable CS8618
 
 namespace ServiceFriends.WebApi.Models.Requests
 {
     public class FriendBySearchRequest
     {
-        [Required]
-        [Range(0, int.MaxValue)]
-        public int Take { get; set; }
-
-        [Required]
-        [Range(0, int.MaxValue)]
-        public int Offset { get; set; }
-
-        [Required]
+        public PaginationRequest Options { get; set; }
         public Guid UserId { get; set; }
     }
 }

@@ -1,133 +1,121 @@
 ﻿using ServiceFriends.Domain.Entities;
-using ServiceFriends.Domain.Enums;
 using ServiceFriends.Domain.Exceptions;
 using ServiceFriends.Domain.Interfaces;
-using System.Collections.Concurrent;
+using ServiceFriends.Domain.Shared;
 
 namespace ServiceFriends.Domain.Services
 {
     public class FriendShipService
     {
         private readonly IFriendShipRepository _friendShipRepository;
-        public FriendShipService(IFriendShipRepository friendShipRepository)
+        private readonly ISentFriendRequestRepository _sentFriendRequestRepository;
+        private readonly IReceivedFriendRequestRepository _receivedFriendRequestRepository;
+        public FriendShipService(
+            IFriendShipRepository friendShipRepository,
+            ISentFriendRequestRepository sentFriendRequestRepository,
+            IReceivedFriendRequestRepository receivedFriendRequestRepository)
         {
             _friendShipRepository = friendShipRepository
                 ?? throw new ArgumentException(nameof(friendShipRepository));
+            _sentFriendRequestRepository = sentFriendRequestRepository
+                 ?? throw new ArgumentException(nameof(sentFriendRequestRepository));
+            _receivedFriendRequestRepository = receivedFriendRequestRepository
+                ?? throw new ArgumentException(nameof(receivedFriendRequestRepository));
+        }
+        public async Task<List<FriendShip>> BySearchAsync
+            (Guid userId, PaginationOptions options, CancellationToken cancellationToken)
+        {
+            return await _friendShipRepository.BySearch(userId, options, cancellationToken);
         }
 
-        public async Task SendRequestAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        public async Task DeleteFriendAsync
+            (FriendShip friendShip, CancellationToken cancellationToken)
         {
-            var friends = new ConcurrentBag<FriendShip>();
-            var userFriend = new FriendShip(Guid.NewGuid(), userId, friendId)
-            {
-                CreatedAt = DateTime.UtcNow,
-                Status = FriendStatus.Sent
-            };
-            friends.Add(userFriend);
-            var friend = new FriendShip(Guid.NewGuid(), friendId, userId)
-            {
-                CreatedAt = DateTime.UtcNow,
-                Status = FriendStatus.Received
-            };
-            friends.Add(friend);
-
-            await _friendShipRepository.AddRange(friends, cancellationToken);
-            //Подумать, делаем ли какое- уведомление у пользователя
-        }
-
-        public async Task AddFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
-        {
-            var friends = new ConcurrentBag<FriendShip>();
-            var (existedUser, existedFriend) = await GetFrinedShip(userId, friendId, cancellationToken);
-
-            existedUser.Status = FriendStatus.Accepted;
-            existedUser.CreatedAt = DateTime.UtcNow;
-
-            existedFriend.Status = FriendStatus.Accepted;
-            existedFriend.CreatedAt = DateTime.UtcNow;
-
-            friends.Add(existedUser);
-            friends.Add(existedFriend);
-
-            await _friendShipRepository.UpdateRange(friends, cancellationToken);
-        }
-
-        public async Task RejectFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
-        {
-            var friends = new ConcurrentBag<FriendShip>();
-            var (existedUser, existedFriend) = await GetFrinedShip(userId, friendId, cancellationToken);
-
-            friends.Add(existedUser);
-            friends.Add(existedFriend);
-
-            await _friendShipRepository.DeleteRange(friends, cancellationToken);
-        }
-
-        public async Task DeleteFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
-        {
-            var friends =
+            var existedFriendShip =
                 await _friendShipRepository.FindFriendsAsync
-                (userId, friendId, cancellationToken);
+                (friendShip.UserId, friendShip.FriendId, cancellationToken)
+                ?? throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");
 
-            if (friends != null && friends.Count != 0)
-            {
-                await _friendShipRepository.DeleteRange(friends, cancellationToken);
-            }
+            await _friendShipRepository.Delete(existedFriendShip, cancellationToken);
         }
 
-        public async Task<List<FriendShip>> BySearchAsync(Guid userId, int take, int offset, CancellationToken cancellationToken)
+        public async Task SendRequestAsync
+            (Guid userId, Guid friendId, CancellationToken cancellationToken)
         {
-            if (take < 0 || offset < 0)
+            var sentRequest = new SentFriendRequest(Guid.NewGuid(), userId, friendId)
             {
-                throw new ArgumentException("Параметр не может быть меньше 0");
-            }
-            return await _friendShipRepository.BySearch(userId, take, offset, cancellationToken);
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var receiverRequest = new ReceivedFriendRequest(Guid.NewGuid(), friendId, userId)
+            {
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _sentFriendRequestRepository.Add(sentRequest, cancellationToken);
+            await _receivedFriendRequestRepository.Add(receiverRequest, cancellationToken);
         }
 
-        //получить список входящих заявок, то есть те, у которых статус Sent
-        public async Task<List<FriendShip>> GetSentRequestAsync(Guid userId, int take, int offset, CancellationToken cancellationToken)
-        {
-            if (take < 0 || offset < 0)
-            {
-                throw new ArgumentException("Параметр не может быть меньше 0");
-            }
-            return await _friendShipRepository.GetSentRequestAsync(userId, take, offset, cancellationToken);
-        }
-
-        //получить список отправленных заявок, то есть те, у которых статус Received
-        public async Task<List<FriendShip>> GetReceivedRequestAsync(Guid userId, int take, int offset, CancellationToken cancellationToken)
-        {
-            if (take < 0 || offset < 0)
-            {
-                throw new ArgumentException("Параметр не может быть меньше 0");
-            }
-            return await _friendShipRepository.GetReceivedRequestAsync(userId, take, offset, cancellationToken);
-        }
-
-        public async Task<bool> IsFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        public async Task<bool> IsFriendAsync
+            (Guid userId, Guid friendId, CancellationToken cancellationToken)
         {
             return await _friendShipRepository.IsFriendAsync(userId, friendId, cancellationToken);
         }
 
-        public async Task<bool> HasSentRequestAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        //получить список входящих заявок, то есть те, у которых статус Sent
+        public async Task<List<SentFriendRequest>> GetSentRequestAsync
+            (Guid userId, PaginationOptions options, CancellationToken cancellationToken)
         {
-            return await _friendShipRepository.HasSentRequestAsync(userId, friendId, cancellationToken);
+            return await _sentFriendRequestRepository
+                .GetSentRequestAsync(userId, options, cancellationToken);
         }
 
-        private async Task<(FriendShip user, FriendShip friend)> GetFrinedShip(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        //получить список отправленных заявок, то есть те, у которых статус Received
+        public async Task<List<ReceivedFriendRequest>> GetReceivedRequestAsync
+            (Guid userId, PaginationOptions options, CancellationToken cancellationToken)
         {
-            var existedUser = await _friendShipRepository.FindReceivedRequestAsync(userId, friendId, cancellationToken);
-            if (existedUser == null)
-            {
-                throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");
-            }
-            var existedFriend = await _friendShipRepository.FindSentRequestAsync(userId, friendId, cancellationToken);
-            if (existedFriend == null)
-            {
-                throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");
-            }
+            return await _receivedFriendRequestRepository
+                .GetReceivedRequestAsync(userId, options, cancellationToken);
+        }
 
-            return (existedUser, existedFriend);
+        public async Task<bool> HasSentRequestAsync
+            (Guid userId, Guid friendId, CancellationToken cancellationToken)
+        {
+            return await _sentFriendRequestRepository
+                .HasSentRequestAsync(userId, friendId, cancellationToken);
+        }
+
+        public async Task AddFriendAsync(FriendShip friendShip, CancellationToken cancellationToken)
+        {
+            var (receivedRequest, sentequest) =
+                  await GetFrinedShip(friendShip.UserId, friendShip.FriendId, cancellationToken);
+
+            await _receivedFriendRequestRepository.Delete(receivedRequest, cancellationToken);
+            await _sentFriendRequestRepository.Delete(sentequest, cancellationToken);
+            await _friendShipRepository.Add(friendShip, cancellationToken);
+        }
+
+        public async Task RejectFriendAsync(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        {
+            var (receivedRequest, sentequest) = 
+                await GetFrinedShip(userId, friendId, cancellationToken);
+           
+            await _receivedFriendRequestRepository.Delete(receivedRequest, cancellationToken);
+            await _sentFriendRequestRepository.Delete(sentequest, cancellationToken);
+        }
+
+        private async Task<(ReceivedFriendRequest receivedRequest, SentFriendRequest sentRequest)> 
+            GetFrinedShip(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        {
+            var receivedRequest = await _receivedFriendRequestRepository
+                .FindReceivedRequestAsync(userId, friendId, cancellationToken)
+                ?? throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");
+
+            var sentequest = await _sentFriendRequestRepository
+                .FindSentRequestAsync(userId, friendId, cancellationToken)
+                ?? throw new FriendShipNotFoundException("Нет такой заявки на дружбу.");
+
+            return (receivedRequest, sentequest);
         }
     }
 }
