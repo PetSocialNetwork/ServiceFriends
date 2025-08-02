@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ServiceFriends.Domain.Entities;
+using ServiceFriends.Domain.Shared;
 using ServiceFriends.WebApi.Models.Requests;
 using ServiceFriends.WebApi.Models.Responses;
 
@@ -22,6 +23,8 @@ namespace ServiceFriends.WebApi.Mappings
             CreateMap<FriendRequest, FriendShip>()
                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                .ForMember(dest => dest.FriendId, opt => opt.MapFrom(src => src.FriendId));
+
+            CreateMap<PaginationRequest, PaginationOptions>();
         }
     }
 }

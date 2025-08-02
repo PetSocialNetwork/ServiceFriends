@@ -127,7 +127,7 @@ namespace ServiceFriends.WebApi.Controllers
         /// <param name="userId">Идентификатор пользователя</param>
         /// <param name="friendId">Идентификатор друга</param>
         /// <param name="cancellationToken">Токен отмены</param>
-        [HttpGet("[action]")]
+        [HttpPost("[action]")]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         public async Task<bool> IsFriendAsync
@@ -143,7 +143,7 @@ namespace ServiceFriends.WebApi.Controllers
         /// <param name="userId">Идентификатор пользователя</param>
         /// <param name="friendId">Идентификатор друга</param>
         /// <param name="cancellationToken">Токен отмены</param>
-        [HttpGet("[action]")]
+        [HttpPost("[action]")]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         public async Task<bool> HasSentRequestAsync

@@ -36,7 +36,7 @@ namespace ServiceFriends.WebApi.Extensions
             services.AddValidatorsFromAssemblyContaining<Program>(ServiceLifetime.Scoped);
             services.AddControllers(options =>
             {
-                options.Filters.Add<CentralizedExceptionHandlingFilter>();
+                //options.Filters.Add<CentralizedExceptionHandlingFilter>();
             });
 
             services.AddEndpointsApiExplorer();

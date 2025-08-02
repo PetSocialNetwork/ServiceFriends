@@ -62,7 +62,6 @@ namespace ServiceFriends.Domain.Services
             return await _friendShipRepository.IsFriendAsync(userId, friendId, cancellationToken);
         }
 
-        //получить список входящих заявок, то есть те, у которых статус Sent
         public async Task<List<SentFriendRequest>> GetSentRequestAsync
             (Guid userId, PaginationOptions options, CancellationToken cancellationToken)
         {
@@ -70,7 +69,6 @@ namespace ServiceFriends.Domain.Services
                 .GetSentRequestAsync(userId, options, cancellationToken);
         }
 
-        //получить список отправленных заявок, то есть те, у которых статус Received
         public async Task<List<ReceivedFriendRequest>> GetReceivedRequestAsync
             (Guid userId, PaginationOptions options, CancellationToken cancellationToken)
         {
@@ -90,6 +88,7 @@ namespace ServiceFriends.Domain.Services
             var (receivedRequest, sentequest) =
                   await GetFrinedShip(friendShip.UserId, friendShip.FriendId, cancellationToken);
 
+            friendShip.CreatedAt = DateTime.UtcNow; 
             await _receivedFriendRequestRepository.Delete(receivedRequest, cancellationToken);
             await _sentFriendRequestRepository.Delete(sentequest, cancellationToken);
             await _friendShipRepository.Add(friendShip, cancellationToken);

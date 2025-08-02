@@ -6,6 +6,7 @@ namespace ServiceFriends.WebApi.Models.Responses
     {
         public Guid Id { get; init; }
         public Guid FriendId { get; init; }
+        public Guid UserId { get; init; }
         public DateTime CreatedAt { get; set; }
     }
 }

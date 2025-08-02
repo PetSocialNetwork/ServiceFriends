@@ -20,7 +20,7 @@ namespace ServiceFriends.DataEntityFramework.Repositories
             (Guid userId, PaginationOptions options, CancellationToken cancellationToken)
         {
             return await Entities
-                .Where(c => c.FriendId == userId)
+                .Where(c => c.UserId == userId)
                 .Skip(options.Take * options.Offset)
                 .Take(options.Take)
                 .ToListAsync(cancellationToken);
